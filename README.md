@@ -25,3 +25,7 @@
 開啟[線上 Demo](https://ericwang2016.github.io/minierp/)，或 clone 後雙擊 `index.html`。首次開啟會載入示範資料，要清空重來可到「設定 → 重置為示範資料」，或匯入自己的 JSON 備份。
 
 資料僅存在該瀏覽器，換裝置前請先用「設定 → 匯出 JSON」備份。
+
+## 授權
+
+[MIT](LICENSE)
