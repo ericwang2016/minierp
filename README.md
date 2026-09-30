@@ -2,6 +2,10 @@
 
 零依賴、單檔的小型企業 ERP 系統。直接用瀏覽器開啟 `index.html` 即可使用，資料儲存於瀏覽器 localStorage。
 
+**線上 Demo：https://ericwang2016.github.io/minierp/**
+
+> Demo 的資料存在你自己的瀏覽器裡，不會上傳，也不會與其他訪客共用。
+
 ## 模組
 
 | 模組 | 功能 |
@@ -18,4 +22,6 @@
 
 ## 使用
 
-雙擊 `index.html`，首次開啟會載入示範資料。要清空重來可到「設定 → 重置為示範資料」，或匯入自己的 JSON 備份。
+開啟[線上 Demo](https://ericwang2016.github.io/minierp/)，或 clone 後雙擊 `index.html`。首次開啟會載入示範資料，要清空重來可到「設定 → 重置為示範資料」，或匯入自己的 JSON 備份。
+
+資料僅存在該瀏覽器，換裝置前請先用「設定 → 匯出 JSON」備份。
