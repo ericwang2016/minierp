@@ -1,3 +1,5 @@
+<img src="favicon.svg" width="72" alt="MiniERP">
+
 # MiniERP
 
 零依賴、單檔的小型企業 ERP 系統。直接用瀏覽器開啟 `index.html` 即可使用，資料儲存於瀏覽器 localStorage。
@@ -5,6 +7,10 @@
 **線上 Demo：https://ericwang2016.github.io/minierp/**
 
 > Demo 的資料存在你自己的瀏覽器裡，不會上傳，也不會與其他訪客共用。
+
+## 畫面
+
+![儀表板](docs/dashboard.jpg)
 
 ## 模組
 

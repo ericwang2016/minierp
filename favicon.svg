@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#2563eb"/>
+  <!-- 紙箱：上蓋 + 箱身 + 封箱膠帶 -->
+  <path d="M32 13 L53 21 L32 29 L11 21 Z" fill="#fff" opacity=".95"/>
+  <path d="M11 24 L30 31.5 L30 51 L11 43.5 Z" fill="#fff" opacity=".75"/>
+  <path d="M34 31.5 L53 24 L53 43.5 L34 51 Z" fill="#fff" opacity=".55"/>
+  <rect x="30" y="29" width="4" height="22" fill="#1d4ed8" opacity=".55"/>
+</svg>
