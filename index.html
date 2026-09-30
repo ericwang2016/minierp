@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiniERP 企業資源管理系統</title>
+<style>
+  :root{--bg:#f4f6f9;--card:#fff;--text:#1f2937;--muted:#6b7280;--line:#e5e7eb;--primary:#2563eb;--primary-d:#1d4ed8;--danger:#dc2626;--ok:#16a34a;--warn:#d97706;--side:#111827;--side-text:#d1d5db}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI","Microsoft JhengHei",system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+  aside{width:220px;background:var(--side);color:var(--side-text);padding:16px 0;position:sticky;top:0;height:100vh;flex-shrink:0}
+  aside h1{font-size:18px;margin:0 16px 20px;color:#fff}
+  aside nav a{display:block;padding:10px 20px;color:var(--side-text);text-decoration:none;cursor:pointer;font-size:14px}
+  aside nav a:hover,aside nav a.active{background:#1f2937;color:#fff;border-left:3px solid var(--primary)}
+  main{flex:1;padding:24px;min-width:0}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+  header h2{margin:0;font-size:22px}
+  .card{background:var(--card);border-radius:10px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .kpi .label{color:var(--muted);font-size:13px}
+  .kpi .val{font-size:26px;font-weight:600;margin-top:6px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+  th{background:#f9fafb;color:var(--muted);font-weight:600;font-size:13px}
+  tr:hover td{background:#fafbff}
+  .r{text-align:right}
+  button,.btn{border:none;border-radius:6px;padding:7px 13px;font-size:13px;cursor:pointer;background:var(--primary);color:#fff}
+  button:hover{background:var(--primary-d)}
+  button.sec{background:#e5e7eb;color:var(--text)}button.sec:hover{background:#d1d5db}
+  button.danger{background:var(--danger)}button.danger:hover{background:#b91c1c}
+  button.ok{background:var(--ok)}button.ok:hover{background:#15803d}
+  button.sm{padding:4px 9px;font-size:12px}
+  input,select,textarea{width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;font-family:inherit}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  .field{margin-bottom:12px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .toolbar{display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+  .toolbar input{max-width:260px}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600}
+  .b-gray{background:#e5e7eb;color:#374151}.b-blue{background:#dbeafe;color:#1e40af}.b-green{background:#dcfce7;color:#166534}.b-yellow{background:#fef3c7;color:#92400e}.b-red{background:#fee2e2;color:#991b1b}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:50}
+  .modal-bg.open{display:flex}
+  .modal{background:#fff;border-radius:10px;width:640px;max-width:95vw;max-height:90vh;overflow:auto;padding:22px}
+  .modal h3{margin:0 0 16px}
+  .modal .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .lines table input,.lines table select{padding:5px}
+  .bar-chart{display:flex;align-items:flex-end;gap:10px;height:160px;padding-top:10px}
+  .bar-chart .bar{flex:1;background:var(--primary);border-radius:4px 4px 0 0;position:relative;min-height:2px}
+  .bar-chart .bar span{position:absolute;bottom:-22px;left:0;right:0;text-align:center;font-size:11px;color:var(--muted)}
+  .bar-chart .bar b{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:11px;font-weight:500}
+  .muted{color:var(--muted);font-size:13px}
+  .toast{position:fixed;bottom:20px;right:20px;background:#111827;color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;opacity:0;transition:.3s;z-index:99}
+  .toast.show{opacity:1}
+  .empty{text-align:center;color:var(--muted);padding:30px}
+  .neg{color:var(--danger)}.pos{color:var(--ok)}
+  @media(max-width:768px){body{flex-direction:column}aside{width:100%;height:auto;position:static}aside nav{display:flex;flex-wrap:wrap}aside nav a{padding:8px 12px}.two{grid-template-columns:1fr}}
+  @media print{aside,header,.toast{display:none}.modal-bg{position:static;background:none;display:block}.modal{box-shadow:none;width:100%}#content{display:none}}
+</style>
+</head>
+<body>
+<aside>
+  <h1>📦 MiniERP</h1>
+  <nav id="nav">
+    <a data-page="dashboard">📊 儀表板</a>
+    <a data-page="products">📦 商品 / 庫存</a>
+    <a data-page="sales">🧾 銷售訂單</a>
+    <a data-page="purchases">🛒 採購訂單</a>
+    <a data-page="customers">👥 客戶</a>
+    <a data-page="suppliers">🏭 供應商</a>
+    <a data-page="finance">💰 財務 / 帳務</a>
+    <a data-page="hr">🧑‍💼 人事</a>
+    <a data-page="reports">📈 報表</a>
+    <a data-page="settings">⚙️ 設定</a>
+  </nav>
+</aside>
+<main>
+  <header><h2 id="pageTitle"></h2><div id="pageActions" class="row"></div></header>
+  <div id="content"></div>
+</main>
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ========== 資料層 ========== */
+const KEY='minierp_v1';
+const defaultState=()=>({
+  seq:{P:1,C:1,S:1,SO:1,PO:1,E:1,T:1},
+  settings:{company:'我的公司',currency:'NT$',taxRate:5},
+  products:[],customers:[],suppliers:[],salesOrders:[],purchaseOrders:[],employees:[],transactions:[]
+});
+// localStorage 在部分環境 (data: URL、隱私模式) 不可用時退回記憶體
+const store={get(){try{return localStorage.getItem(KEY);}catch(e){return null;}},set(v){try{localStorage.setItem(KEY,v);}catch(e){}},del(){try{localStorage.removeItem(KEY);}catch(e){}}};
+let state=load();
+function load(){try{const s=JSON.parse(store.get());if(s)return Object.assign(defaultState(),s);}catch(e){}return seed();}
+function save(){store.set(JSON.stringify(state));}
+function nextId(p){const n=state.seq[p]++;return p+String(n).padStart(4,'0');}
+function today(){return new Date().toISOString().slice(0,10);}
+const fmt=n=>state.settings.currency+' '+Number(n||0).toLocaleString('zh-TW',{maximumFractionDigits:2});
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+
+function seed(){
+  const s=defaultState();
+  const P=(sku,name,cat,cost,price,stock,min)=>({id:nextIdS(s,'P'),sku,name,category:cat,cost,price,stock,minStock:min,unit:'個'});
+  s.products.push(P('A-001','無線滑鼠','電腦周邊',250,590,42,10),P('A-002','機械鍵盤','電腦周邊',900,1990,8,10),P('B-001','27吋螢幕','顯示器',4500,7990,15,5),P('C-001','USB-C 充電線','配件',60,199,120,30));
+  s.customers.push({id:nextIdS(s,'C'),name:'大同科技有限公司',contact:'王小明',phone:'02-2345-6789',email:'ming@example.com',address:'台北市中山區'},{id:nextIdS(s,'C'),name:'光華電腦行',contact:'李美玲',phone:'02-9876-5432',email:'mei@example.com',address:'台北市中正區'});
+  s.suppliers.push({id:nextIdS(s,'S'),name:'宏達電子',contact:'張大偉',phone:'03-1234-5678',email:'wei@supplier.com',address:'桃園市'},{id:nextIdS(s,'S'),name:'環球零件',contact:'陳雅婷',phone:'04-8765-4321',email:'ting@supplier.com',address:'台中市'});
+  s.employees.push({id:nextIdS(s,'E'),name:'林志豪',dept:'業務部',title:'業務經理',salary:65000,hireDate:'2022-03-01',status:'在職'},{id:nextIdS(s,'E'),name:'黃淑芬',dept:'財務部',title:'會計',salary:48000,hireDate:'2023-07-15',status:'在職'});
+  const d=n=>{const x=new Date();x.setDate(x.getDate()-n);return x.toISOString().slice(0,10);};
+  s.salesOrders.push({id:nextIdS(s,'SO'),date:d(20),customerId:'C0001',status:'已付款',lines:[{productId:'P0001',qty:10,price:590},{productId:'P0003',qty:2,price:7990}],note:''});
+  s.salesOrders.push({id:nextIdS(s,'SO'),date:d(5),customerId:'C0002',status:'已確認',lines:[{productId:'P0002',qty:3,price:1990}],note:''});
+  s.purchaseOrders.push({id:nextIdS(s,'PO'),date:d(15),supplierId:'S0001',status:'已付款',lines:[{productId:'P0001',qty:50,price:250}],note:''});
+  s.transactions.push({id:nextIdS(s,'T'),date:d(20),type:'收入',category:'銷售',amount:21880,ref:'SO0001',note:'銷售訂單收款'});
+  s.transactions.push({id:nextIdS(s,'T'),date:d(15),type:'支出',category:'採購',amount:12500,ref:'PO0001',note:'採購訂單付款'});
+  s.transactions.push({id:nextIdS(s,'T'),date:d(10),type:'支出',category:'租金',amount:30000,ref:'',note:'辦公室租金'});
+  store.set(JSON.stringify(s));return s;
+}
+function nextIdS(s,p){const n=s.seq[p]++;return p+String(n).padStart(4,'0');}
+
+/* ========== 共用 UI ========== */
+const $=s=>document.querySelector(s);
+const byId=(arr,id)=>arr.find(x=>x.id===id);
+const nameOf=(arr,id)=>byId(arr,id)?.name||'—';
+const orderTotal=o=>o.lines.reduce((a,l)=>a+l.qty*l.price,0);
+function badge(st){const m={'草稿':'b-gray','已確認':'b-blue','已出貨':'b-yellow','已收貨':'b-yellow','已付款':'b-green','已取消':'b-red','在職':'b-green','離職':'b-gray','收入':'b-green','支出':'b-red'};return `<span class="badge ${m[st]||'b-gray'}">${esc(st)}</span>`;}
+function openModal(html){$('#modal').innerHTML=html;$('#modalBg').classList.add('open');}
+function closeModal(){$('#modalBg').classList.remove('open');}
+$('#modalBg').addEventListener('click',e=>{if(e.target.id==='modalBg')closeModal();});
+function formData(sel){const o={};document.querySelectorAll(sel+' [name]').forEach(el=>{o[el.name]=el.type==='number'?Number(el.value):el.value;});return o;}
+function table(cols,rows,rowFn){if(!rows.length)return '<div class="empty">尚無資料</div>';return `<table><thead><tr>${cols.map(c=>`<th class="${c.r?'r':''}">${c.h}</th>`).join('')}</tr></thead><tbody>${rows.map(rowFn).join('')}</tbody></table>`;}
+
+/* ========== 路由 ========== */
+let page='dashboard',search='';
+const titles={dashboard:'儀表板',products:'商品 / 庫存',sales:'銷售訂單',purchases:'採購訂單',customers:'客戶',suppliers:'供應商',finance:'財務 / 帳務',hr:'人事',reports:'報表',settings:'設定'};
+document.querySelectorAll('#nav a').forEach(a=>a.onclick=()=>go(a.dataset.page));
+function go(p){page=p;search='';render();}
+function render(){
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.page===page));
+  $('#pageTitle').textContent=titles[page];
+  $('#pageActions').innerHTML='';
+  pages[page]();
+}
+function searchBox(ph){return `<input placeholder="${ph}" value="${esc(search)}" oninput="search=this.value;render();const i=document.querySelector('.toolbar input');i.focus();i.setSelectionRange(i.value.length,i.value.length)">`;}
+const match=(obj,fields)=>!search||fields.some(f=>String(obj[f]??'').toLowerCase().includes(search.toLowerCase()));
+
+/* ========== 頁面 ========== */
+const pages={};
+
+pages.dashboard=()=>{
+  const revenue=state.transactions.filter(t=>t.type==='收入').reduce((a,t)=>a+t.amount,0);
+  const expense=state.transactions.filter(t=>t.type==='支出').reduce((a,t)=>a+t.amount,0);
+  const ar=state.salesOrders.filter(o=>['已確認','已出貨'].includes(o.status)).reduce((a,o)=>a+orderTotal(o),0);
+  const ap=state.purchaseOrders.filter(o=>['已確認','已收貨'].includes(o.status)).reduce((a,o)=>a+orderTotal(o),0);
+  const stockVal=state.products.reduce((a,p)=>a+p.stock*p.cost,0);
+  const low=state.products.filter(p=>p.stock<=p.minStock);
+  // 近 6 個月營收
+  const months=[];for(let i=5;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);months.push(d.toISOString().slice(0,7));}
+  const mrev=months.map(m=>state.transactions.filter(t=>t.type==='收入'&&t.date.startsWith(m)).reduce((a,t)=>a+t.amount,0));
+  const max=Math.max(...mrev,1);
+  const recent=[...state.salesOrders].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  $('#content').innerHTML=`
+  <div class="grid">
+    <div class="card kpi"><div class="label">總收入</div><div class="val pos">${fmt(revenue)}</div></div>
+    <div class="card kpi"><div class="label">總支出</div><div class="val neg">${fmt(expense)}</div></div>
+    <div class="card kpi"><div class="label">淨利</div><div class="val ${revenue-expense>=0?'pos':'neg'}">${fmt(revenue-expense)}</div></div>
+    <div class="card kpi"><div class="label">應收帳款</div><div class="val">${fmt(ar)}</div></div>
+    <div class="card kpi"><div class="label">應付帳款</div><div class="val">${fmt(ap)}</div></div>
+    <div class="card kpi"><div class="label">庫存價值</div><div class="val">${fmt(stockVal)}</div></div>
+  </div>
+  <div class="grid" style="grid-template-columns:2fr 1fr">
+    <div class="card"><h3 style="margin-top:0">近 6 個月營收</h3><div class="bar-chart">${months.map((m,i)=>`<div class="bar" style="height:${mrev[i]/max*100}%"><b>${mrev[i]?Math.round(mrev[i]/1000)+'k':''}</b><span>${m.slice(5)}月</span></div>`).join('')}</div><div style="height:24px"></div></div>
+    <div class="card"><h3 style="margin-top:0">⚠️ 低庫存警示 (${low.length})</h3>${low.length?table([{h:'商品'},{h:'庫存',r:1},{h:'安全量',r:1}],low,p=>`<tr><td>${esc(p.name)}</td><td class="r neg">${p.stock}</td><td class="r">${p.minStock}</td></tr>`):'<div class="muted">庫存正常</div>'}</div>
+  </div>
+  <div class="card"><h3 style="margin-top:0">最近銷售訂單</h3>${table([{h:'單號'},{h:'日期'},{h:'客戶'},{h:'狀態'},{h:'金額',r:1}],recent,o=>`<tr><td>${o.id}</td><td>${o.date}</td><td>${esc(nameOf(state.customers,o.customerId))}</td><td>${badge(o.status)}</td><td class="r">${fmt(orderTotal(o))}</td></tr>`)}</div>`;
+};
+
+/* --- 商品 --- */
+pages.products=()=>{
+  $('#pageActions').innerHTML=`<button onclick="editProduct()">＋ 新增商品</button>`;
+  const rows=state.products.filter(p=>match(p,['sku','name','category']));
+  $('#content').innerHTML=`<div class="card"><div class="toolbar">${searchBox('搜尋 SKU / 名稱 / 分類')}<span class="muted">共 ${rows.length} 項</span></div>
+  ${table([{h:'SKU'},{h:'名稱'},{h:'分類'},{h:'成本',r:1},{h:'售價',r:1},{h:'庫存',r:1},{h:'安全量',r:1},{h:'操作'}],rows,p=>`<tr><td>${esc(p.sku)}</td><td>${esc(p.name)}</td><td>${esc(p.category)}</td><td class="r">${fmt(p.cost)}</td><td class="r">${fmt(p.price)}</td><td class="r ${p.stock<=p.minStock?'neg':''}">${p.stock} ${esc(p.unit)}</td><td class="r">${p.minStock}</td><td><button class="sm sec" onclick="editProduct('${p.id}')">編輯</button> <button class="sm sec" onclick="adjustStock('${p.id}')">調整庫存</button> <button class="sm danger" onclick="del('products','${p.id}')">刪除</button></td></tr>`)}</div>`;
+};
+window.editProduct=id=>{
+  const p=id?byId(state.products,id):{sku:'',name:'',category:'',cost:0,price:0,stock:0,minStock:0,unit:'個'};
+  openModal(`<h3>${id?'編輯':'新增'}商品</h3><div id="f"><div class="two">
+    <div class="field"><label>SKU</label><input name="sku" value="${esc(p.sku)}"></div>
+    <div class="field"><label>名稱</label><input name="name" value="${esc(p.name)}"></div>
+    <div class="field"><label>分類</label><input name="category" value="${esc(p.category)}"></div>
+    <div class="field"><label>單位</label><input name="unit" value="${esc(p.unit)}"></div>
+    <div class="field"><label>成本</label><input name="cost" type="number" value="${p.cost}"></div>
+    <div class="field"><label>售價</label><input name="price" type="number" value="${p.price}"></div>
+    <div class="field"><label>庫存</label><input name="stock" type="number" value="${p.stock}"></div>
+    <div class="field"><label>安全庫存量</label><input name="minStock" type="number" value="${p.minStock}"></div>
+  </div></div><div class="actions"><button class="sec" onclick="closeModal()">取消</button><button onclick="saveEntity('products','P','${id||''}')">儲存</button></div>`);
+};
+window.adjustStock=id=>{
+  const p=byId(state.products,id);
+  openModal(`<h3>調整庫存：${esc(p.name)}</h3><div id="f"><div class="field"><label>目前庫存 ${p.stock}，調整量 (可負數)</label><input name="delta" type="number" value="0"></div><div class="field"><label>原因</label><input name="reason" placeholder="盤點 / 損耗 / 其他"></div></div>
+  <div class="actions"><button class="sec" onclick="closeModal()">取消</button><button onclick="applyStock('${id}')">確定</button></div>`);
+};
+window.applyStock=id=>{const d=formData('#f');const p=byId(state.products,id);p.stock+=d.delta;save();closeModal();render();toast('庫存已調整');};
+
+/* --- 客戶 / 供應商 (通用主檔) --- */
+function partyPage(coll,prefix,label){
+  $('#pageActions').innerHTML=`<button onclick="editParty('${coll}','${prefix}','${label}')">＋ 新增${label}</button>`;
+  const rows=state[coll].filter(p=>match(p,['name','contact','phone','email']));
+  $('#content').innerHTML=`<div class="card"><div class="toolbar">${searchBox('搜尋名稱 / 聯絡人 / 電話')}<span class="muted">共 ${rows.length} 筆</span></div>
+  ${table([{h:'編號'},{h:'名稱'},{h:'聯絡人'},{h:'電話'},{h:'Email'},{h:'地址'},{h:'操作'}],rows,p=>`<tr><td>${p.id}</td><td>${esc(p.name)}</td><td>${esc(p.contact)}</td><td>${esc(p.phone)}</td><td>${esc(p.email)}</td><td>${esc(p.address)}</td><td><button class="sm sec" onclick="editParty('${coll}','${prefix}','${label}','${p.id}')">編輯</button> <button class="sm danger" onclick="del('${coll}','${p.id}')">刪除</button></td></tr>`)}</div>`;
+}
+pages.customers=()=>partyPage('customers','C','客戶');
+pages.suppliers=()=>partyPage('suppliers','S','供應商');
+window.editParty=(coll,prefix,label,id)=>{
+  const p=id?byId(state[coll],id):{name:'',contact:'',phone:'',email:'',address:''};
+  openModal(`<h3>${id?'編輯':'新增'}${label}</h3><div id="f"><div class="two">
+    <div class="field"><label>名稱</label><input name="name" value="${esc(p.name)}"></div>
+    <div class="field"><label>聯絡人</label><input name="contact" value="${esc(p.contact)}"></div>
+    <div class="field"><label>電話</label><input name="phone" value="${esc(p.phone)}"></div>
+    <div class="field"><label>Email</label><input name="email" value="${esc(p.email)}"></div>
+  </div><div class="field"><label>地址</label><input name="address" value="${esc(p.address)}"></div></div>
+  <div class="actions"><button class="sec" onclick="closeModal()">取消</button><button onclick="saveEntity('${coll}','${prefix}','${id||''}')">儲存</button></div>`);
+};
+
+/* --- 人事 --- */
+pages.hr=()=>{
+  $('#pageActions').innerHTML=`<button onclick="editEmployee()">＋ 新增員工</button>`;
+  const rows=state.employees.filter(e=>match(e,['name','dept','title']));
+  const payroll=state.employees.filter(e=>e.status==='在職').reduce((a,e)=>a+e.salary,0);
+  $('#content').innerHTML=`<div class="grid"><div class="card kpi"><div class="label">在職人數</div><div class="val">${state.employees.filter(e=>e.status==='在職').length}</div></div><div class="card kpi"><div class="label">每月薪資總額</div><div class="val">${fmt(payroll)}</div></div></div>
+  <div class="card"><div class="toolbar">${searchBox('搜尋姓名 / 部門 / 職稱')}</div>
+  ${table([{h:'編號'},{h:'姓名'},{h:'部門'},{h:'職稱'},{h:'月薪',r:1},{h:'到職日'},{h:'狀態'},{h:'操作'}],rows,e=>`<tr><td>${e.id}</td><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${esc(e.title)}</td><td class="r">${fmt(e.salary)}</td><td>${e.hireDate}</td><td>${badge(e.status)}</td><td><button class="sm sec" onclick="editEmployee('${e.id}')">編輯</button> <button class="sm danger" onclick="del('employees','${e.id}')">刪除</button></td></tr>`)}</div>`;
+};
+window.editEmployee=id=>{
+  const e=id?byId(state.employees,id):{name:'',dept:'',title:'',salary:0,hireDate:today(),status:'在職'};
+  openModal(`<h3>${id?'編輯':'新增'}員工</h3><div id="f"><div class="two">
+    <div class="field"><label>姓名</label><input name="name" value="${esc(e.name)}"></div>
+    <div class="field"><label>部門</label><input name="dept" value="${esc(e.dept)}"></div>
+    <div class="field"><label>職稱</label><input name="title" value="${esc(e.title)}"></div>
+    <div class="field"><label>月薪</label><input name="salary" type="number" value="${e.salary}"></div>
+    <div class="field"><label>到職日</label><input name="hireDate" type="date" value="${e.hireDate}"></div>
+    <div class="field"><label>狀態</label><select name="status"><option ${e.status==='在職'?'selected':''}>在職</option><option ${e.status==='離職'?'selected':''}>離職</option></select></div>
+  </div></div><div class="actions"><button class="sec" onclick="closeModal()">取消</button><button onclick="saveEntity('employees','E','${id||''}')">儲存</button></div>`);
+};
+
+/* --- 通用儲存 / 刪除 --- */
+window.saveEntity=(coll,prefix,id)=>{
+  const d=formData('#f');
+  if(!d.name){toast('名稱為必填');return;}
+  if(id)Object.assign(byId(state[coll],id),d);else state[coll].push(Object.assign({id:nextId(prefix)},d));
+  save();closeModal();render();toast('已儲存');
+};
+window.del=(coll,id)=>{if(!confirm('確定刪除 '+id+'？'))return;state[coll]=state[coll].filter(x=>x.id!==id);save();render();toast('已刪除');};
+
+/* --- 訂單 (銷售 / 採購) --- */
+function orderPage(kind){
+  const isSale=kind==='sales';const coll=isSale?'salesOrders':'purchaseOrders';const partyColl=isSale?'customers':'suppliers';
+  $('#pageActions').innerHTML=`<button onclick="editOrder('${kind}')">＋ 新增${isSale?'銷售':'採購'}單</button>`;
+  const rows=[...state[coll]].sort((a,b)=>b.id.localeCompare(a.id)).filter(o=>match({...o,party:nameOf(state[partyColl],isSale?o.customerId:o.supplierId)},['id','party','status']));
+  $('#content').innerHTML=`<div class="card"><div class="toolbar">${searchBox('搜尋單號 / '+(isSale?'客戶':'供應商')+' / 狀態')}<span class="muted">共 ${rows.length} 筆</span></div>
+  ${table([{h:'單號'},{h:'日期'},{h:isSale?'客戶':'供應商'},{h:'品項'},{h:'狀態'},{h:'金額',r:1},{h:'操作'}],rows,o=>{
+    const pid=isSale?o.customerId:o.supplierId;
+    let acts=`<button class="sm sec" onclick="viewOrder('${kind}','${o.id}')">檢視</button> `;
+    if(o.status==='草稿')acts+=`<button class="sm sec" onclick="editOrder('${kind}','${o.id}')">編輯</button> <button class="sm" onclick="setStatus('${kind}','${o.id}','已確認')">確認</button> <button class="sm danger" onclick="setStatus('${kind}','${o.id}','已取消')">取消</button> `;
+    else if(o.status==='已確認')acts+=`<button class="sm ok" onclick="setStatus('${kind}','${o.id}','${isSale?'已出貨':'已收貨'}')">${isSale?'出貨':'收貨'}</button> <button class="sm danger" onclick="setStatus('${kind}','${o.id}','已取消')">取消</button> `;
+    else if(o.status==='已出貨'||o.status==='已收貨')acts+=`<button class="sm ok" onclick="setStatus('${kind}','${o.id}','已付款')">${isSale?'收款':'付款'}</button> `;
+    if(o.status==='草稿'||o.status==='已取消')acts+=`<button class="sm danger" onclick="del('${coll}','${o.id}')">刪除</button>`;
+    return `<tr><td>${o.id}</td><td>${o.date}</td><td>${esc(nameOf(state[partyColl],pid))}</td><td>${o.lines.length} 項</td><td>${badge(o.status)}</td><td class="r">${fmt(orderTotal(o))}</td><td>${acts}</td></tr>`;})}</div>`;
+}
+pages.sales=()=>orderPage('sales');
+pages.purchases=()=>orderPage('purchases');
+
+// 狀態流轉：草稿 → 已確認 → 出貨/收貨（異動庫存）→ 已付款（自動記帳）
+window.setStatus=(kind,id,st)=>{
+  const isSale=kind==='sales';const o=byId(state[isSale?'salesOrders':'purchaseOrders'],id);
+  if(st==='已出貨'){
+    const short=o.lines.filter(l=>(byId(state.products,l.productId)?.stock??0)<l.qty);
+    if(short.length){toast('庫存不足：'+short.map(l=>nameOf(state.products,l.productId)).join('、'));return;}
+    o.lines.forEach(l=>byId(state.products,l.productId).stock-=l.qty);
+  }
+  if(st==='已收貨')o.lines.forEach(l=>{const p=byId(state.products,l.productId);if(p){p.stock+=l.qty;p.cost=l.price;}});
+  if(st==='已付款')state.transactions.push({id:nextId('T'),date:today(),type:isSale?'收入':'支出',category:isSale?'銷售':'採購',amount:orderTotal(o),ref:o.id,note:(isSale?'銷售訂單收款':'採購訂單付款')});
+  o.status=st;save();render();toast(o.id+' → '+st);
+};
+window.viewOrder=(kind,id)=>{
+  const isSale=kind==='sales';const o=byId(state[isSale?'salesOrders':'purchaseOrders'],id);
+  const party=byId(state[isSale?'customers':'suppliers'],isSale?o.customerId:o.supplierId)||{};
+  const sub=orderTotal(o),tax=sub*state.settings.taxRate/100;
+  openModal(`<div class="muted">${esc(state.settings.company)}</div><h3>${isSale?'銷售單':'採購單'} ${o.id} ${badge(o.status)}</h3><div class="two"><div><b>${isSale?'客戶':'供應商'}：</b>${esc(party.name)}<br><span class="muted">${esc(party.contact)} ${esc(party.phone)}</span></div><div><b>日期：</b>${o.date}<br><b>備註：</b>${esc(o.note)||'—'}</div></div>
+  <table style="margin-top:12px"><thead><tr><th>商品</th><th class="r">數量</th><th class="r">單價</th><th class="r">小計</th></tr></thead><tbody>${o.lines.map(l=>`<tr><td>${esc(nameOf(state.products,l.productId))}</td><td class="r">${l.qty}</td><td class="r">${fmt(l.price)}</td><td class="r">${fmt(l.qty*l.price)}</td></tr>`).join('')}</tbody></table>
+  <div style="text-align:right;margin-top:12px">小計 ${fmt(sub)}<br>稅額 (${state.settings.taxRate}%) ${fmt(tax)}<br><b style="font-size:18px">總計 ${fmt(sub+tax)}</b></div>
+  <div class="actions"><button class="sec" onclick="window.print()">列印</button><button onclick="closeModal()">關閉</button></div>`);
+};
+window.editOrder=(kind,id)=>{
+  const isSale=kind==='sales';const partyColl=isSale?'customers':'suppliers';
+  if(!state.products.length){toast('請先建立商品');return;}
+  const defLine=()=>({productId:state.products[0].id,qty:1,price:isSale?state.products[0].price:state.products[0].cost});
+  const o=id?JSON.parse(JSON.stringify(byId(state[isSale?'salesOrders':'purchaseOrders'],id))):{date:today(),customerId:'',supplierId:'',status:'草稿',lines:[defLine()],note:''};
+  window._ord=o;
+  const draw=()=>{
+    const pid=isSale?o.customerId:o.supplierId;
+    openModal(`<h3>${id?'編輯':'新增'}${isSale?'銷售':'採購'}單</h3><div id="f"><div class="two">
+      <div class="field"><label>${isSale?'客戶':'供應商'}</label><select onchange="_ord.${isSale?'customerId':'supplierId'}=this.value"><option value="">請選擇</option>${state[partyColl].map(p=>`<option value="${p.id}" ${p.id===pid?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>日期</label><input type="date" value="${o.date}" onchange="_ord.date=this.value"></div></div>
+      <div class="field"><label>備註</label><input value="${esc(o.note)}" oninput="_ord.note=this.value"></div>
+      <div class="lines"><table><thead><tr><th style="width:45%">商品</th><th>數量</th><th>單價</th><th class="r">小計</th><th></th></tr></thead><tbody>
+      ${o.lines.map((l,i)=>`<tr><td><select onchange="_ordLine(${i},'productId',this.value)">${state.products.map(p=>`<option value="${p.id}" ${p.id===l.productId?'selected':''}>${esc(p.name)} (庫存 ${p.stock})</option>`).join('')}</select></td><td><input type="number" min="1" value="${l.qty}" onchange="_ordLine(${i},'qty',+this.value)"></td><td><input type="number" value="${l.price}" onchange="_ordLine(${i},'price',+this.value)"></td><td class="r">${fmt(l.qty*l.price)}</td><td><button class="sm danger" onclick="_ord.lines.splice(${i},1);_ordDraw()">✕</button></td></tr>`).join('')}
+      </tbody></table><button class="sm sec" style="margin-top:8px" onclick="_ordAdd()">＋ 加入品項</button></div>
+      <div style="text-align:right;font-size:16px;margin-top:10px"><b>合計 ${fmt(orderTotal(o))}</b></div></div>
+      <div class="actions"><button class="sec" onclick="closeModal()">取消</button><button onclick="saveOrder('${kind}','${id||''}')">儲存</button></div>`);
+  };
+  window._ordDraw=draw;
+  window._ordAdd=()=>{o.lines.push(defLine());draw();};
+  window._ordLine=(i,k,v)=>{o.lines[i][k]=v;if(k==='productId'){const p=byId(state.products,v);o.lines[i].price=isSale?p.price:p.cost;}draw();};
+  draw();
+};
+window.saveOrder=(kind,id)=>{
+  const isSale=kind==='sales';const o=window._ord;const coll=isSale?'salesOrders':'purchaseOrders';
+  if(!(isSale?o.customerId:o.supplierId)){toast('請選擇'+(isSale?'客戶':'供應商'));return;}
+  if(!o.lines.length||o.lines.some(l=>!l.productId||l.qty<=0)){toast('請至少加入一項有效品項');return;}
+  if(id)Object.assign(byId(state[coll],id),o);else{o.id=nextId(isSale?'SO':'PO');state[coll].push(o);}
+  save();closeModal();render();toast('訂單已儲存');
+};
+
+/* --- 財務 --- */
+pages.finance=()=>{
+  $('#pageActions').innerHTML=`<button onclick="editTx()">＋ 記一筆</button>`;
+  const rows=[...state.transactions].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).filter(t=>match(t,['type','category','ref','note']));
+  const inc=state.transactions.filter(t=>t.type==='收入').reduce((a,t)=>a+t.amount,0),exp=state.transactions.filter(t=>t.type==='支出').reduce((a,t)=>a+t.amount,0);
+  const ar=state.salesOrders.filter(o=>['已確認','已出貨'].includes(o.status)),ap=state.purchaseOrders.filter(o=>['已確認','已收貨'].includes(o.status));
+  $('#content').innerHTML=`<div class="grid"><div class="card kpi"><div class="label">收入</div><div class="val pos">${fmt(inc)}</div></div><div class="card kpi"><div class="label">支出</div><div class="val neg">${fmt(exp)}</div></div><div class="card kpi"><div class="label">現金餘額</div><div class="val">${fmt(inc-exp)}</div></div></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr">
+    <div class="card"><h3 style="margin-top:0">應收帳款 (${ar.length})</h3>${table([{h:'單號'},{h:'客戶'},{h:'金額',r:1}],ar,o=>`<tr><td>${o.id}</td><td>${esc(nameOf(state.customers,o.customerId))}</td><td class="r">${fmt(orderTotal(o))}</td></tr>`)}</div>
+    <div class="card"><h3 style="margin-top:0">應付帳款 (${ap.length})</h3>${table([{h:'單號'},{h:'供應商'},{h:'金額',r:1}],ap,o=>`<tr><td>${o.id}</td><td>${esc(nameOf(state.suppliers,o.supplierId))}</td><td class="r">${fmt(orderTotal(o))}</td></tr>`)}</div>
+  </div>
+  <div class="card"><div class="toolbar">${searchBox('搜尋類別 / 單號 / 備註')}</div>
+  ${table([{h:'編號'},{h:'日期'},{h:'類型'},{h:'類別'},{h:'關聯單號'},{h:'備註'},{h:'金額',r:1},{h:'操作'}],rows,t=>`<tr><td>${t.id}</td><td>${t.date}</td><td>${badge(t.type)}</td><td>${esc(t.category)}</td><td>${esc(t.ref)}</td><td>${esc(t.note)}</td><td class="r ${t.type==='收入'?'pos':'neg'}">${t.type==='收入'?'+':'-'}${fmt(t.amount)}</td><td><button class="sm sec" onclick="editTx('${t.id}')">編輯</button> <button class="sm danger" onclick="del('transactions','${t.id}')">刪除</button></td></tr>`)}</div>`;
+};
+window.editTx=id=>{
+  const t=id?byId(state.transactions,id):{date:today(),type:'支出',category:'',amount:0,ref:'',note:''};
+  openModal(`<h3>${id?'編輯':'新增'}帳務</h3><div id="f"><div class="two">
+    <div class="field"><label>日期</label><input name="date" type="date" value="${t.date}"></div>
+    <div class="field"><label>類型</label><select name="type"><option ${t.type==='收入'?'selected':''}>收入</option><option ${t.type==='支出'?'selected':''}>支出</option></select></div>
+    <div class="field"><label>類別</label><input name="category" value="${esc(t.category)}" placeholder="銷售 / 採購 / 租金 / 薪資 / 水電..."></div>
+    <div class="field"><label>金額</label><input name="amount" type="number" value="${t.amount}"></div>
+    <div class="field"><label>關聯單號</label><input name="ref" value="${esc(t.ref)}"></div>
+    <div class="field"><label>備註</label><input name="note" value="${esc(t.note)}"></div>
+  </div></div><div class="actions"><button class="sec" onclick="closeModal()">取消</button><button onclick="saveTx('${id||''}')">儲存</button></div>`);
+};
+window.saveTx=id=>{const d=formData('#f');if(!d.amount){toast('請輸入金額');return;}if(id)Object.assign(byId(state.transactions,id),d);else state.transactions.push(Object.assign({id:nextId('T')},d));save();closeModal();render();toast('已儲存');};
+
+/* --- 報表 --- */
+pages.reports=()=>{
+  const active=o=>o.status!=='草稿'&&o.status!=='已取消';
+  // 商品銷售排行 / 毛利
+  const sales={};state.salesOrders.filter(active).forEach(o=>o.lines.forEach(l=>{const s=sales[l.productId]=sales[l.productId]||{qty:0,amt:0,cost:0};s.qty+=l.qty;s.amt+=l.qty*l.price;s.cost+=l.qty*(byId(state.products,l.productId)?.cost||0);}));
+  const top=Object.entries(sales).map(([id,v])=>({id,...v})).sort((a,b)=>b.amt-a.amt);
+  // 客戶排行
+  const cust={};state.salesOrders.filter(active).forEach(o=>{cust[o.customerId]=(cust[o.customerId]||0)+orderTotal(o);});
+  const topC=Object.entries(cust).sort((a,b)=>b[1]-a[1]);
+  // 支出分類
+  const cat={};state.transactions.filter(t=>t.type==='支出').forEach(t=>cat[t.category]=(cat[t.category]||0)+t.amount);
+  const totalExp=Object.values(cat).reduce((a,b)=>a+b,0)||1;
+  // 庫存彙總
+  const inv=Object.entries(state.products.reduce((m,p)=>{const g=m[p.category]=m[p.category]||{n:0,v:0};g.n++;g.v+=p.stock*p.cost;return m;},{}));
+  $('#content').innerHTML=`<div class="grid" style="grid-template-columns:1fr 1fr">
+  <div class="card"><h3 style="margin-top:0">商品銷售排行 / 毛利</h3>${table([{h:'商品'},{h:'數量',r:1},{h:'營收',r:1},{h:'毛利',r:1},{h:'毛利率',r:1}],top,r=>`<tr><td>${esc(nameOf(state.products,r.id))}</td><td class="r">${r.qty}</td><td class="r">${fmt(r.amt)}</td><td class="r">${fmt(r.amt-r.cost)}</td><td class="r">${r.amt?((r.amt-r.cost)/r.amt*100).toFixed(1):0}%</td></tr>`)}</div>
+  <div class="card"><h3 style="margin-top:0">客戶貢獻排行</h3>${table([{h:'客戶'},{h:'營收',r:1}],topC,([id,v])=>`<tr><td>${esc(nameOf(state.customers,id))}</td><td class="r">${fmt(v)}</td></tr>`)}</div>
+  <div class="card"><h3 style="margin-top:0">支出分類</h3>${table([{h:'類別'},{h:'金額',r:1},{h:'占比',r:1}],Object.entries(cat).sort((a,b)=>b[1]-a[1]),([k,v])=>`<tr><td>${esc(k)}</td><td class="r">${fmt(v)}</td><td class="r">${(v/totalExp*100).toFixed(1)}%</td></tr>`)}</div>
+  <div class="card"><h3 style="margin-top:0">庫存彙總</h3>${table([{h:'分類'},{h:'品項',r:1},{h:'庫存價值',r:1}],inv,([k,v])=>`<tr><td>${esc(k)}</td><td class="r">${v.n}</td><td class="r">${fmt(v.v)}</td></tr>`)}</div>
+  </div>`;
+};
+
+/* --- 設定 --- */
+pages.settings=()=>{
+  const s=state.settings;
+  $('#content').innerHTML=`<div class="card"><h3 style="margin-top:0">公司設定</h3><div id="f" class="two">
+    <div class="field"><label>公司名稱</label><input name="company" value="${esc(s.company)}"></div>
+    <div class="field"><label>貨幣符號</label><input name="currency" value="${esc(s.currency)}"></div>
+    <div class="field"><label>稅率 (%)</label><input name="taxRate" type="number" value="${s.taxRate}"></div>
+  </div><button onclick="Object.assign(state.settings,formData('#f'));save();render();toast('設定已儲存')">儲存設定</button></div>
+  <div class="card"><h3 style="margin-top:0">資料備份</h3><div class="row">
+    <button onclick="exportData()">匯出 JSON</button>
+    <label class="btn" style="background:#e5e7eb;color:#1f2937;display:inline-block;margin:0">匯入 JSON<input type="file" accept=".json" style="display:none" onchange="importData(this)"></label>
+    <button class="danger" onclick="if(confirm('確定清除所有資料並重置為示範資料？')){store.del();location.reload();}">重置為示範資料</button>
+  </div><p class="muted">資料儲存在瀏覽器 localStorage，換裝置或清除瀏覽器資料前請先匯出備份。</p></div>`;
+};
+window.exportData=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));a.download='minierp-backup-'+today()+'.json';a.click();};
+window.importData=inp=>{const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{state=Object.assign(defaultState(),JSON.parse(r.result));save();render();toast('匯入成功');}catch(e){toast('檔案格式錯誤');}};r.readAsText(f);};
+
+render();
+</script>
+</body>
+</html>
